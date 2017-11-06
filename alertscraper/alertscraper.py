@@ -170,6 +170,7 @@ def main(args):
         with open(args.htmlfile, 'a+') as f:
             f.write(as_html)
 
+
 def send_email(email_address, html, text, count, url):
     import smtplib
 
