@@ -216,10 +216,15 @@ def send_email(email_address, html, text, count, url):
 
 
 def cli():
-    # Hack to get it to work in script situation
     args = list(sys.argv)
+
+    # Hacks to get it to work in script situation
+    if args and args[0].endswith('alertscraper'):
+        args.pop(0)
+
     if __file__ in args:
         args.remove(__file__)
+
     main(parse_args(args))
 
 
