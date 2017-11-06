@@ -21,16 +21,10 @@ def parse_args(argv):
         'DOM elements, and then emailing if new ones are added.',
     )
 
-    #backup_dir = os.environ.get('ALERTSCRAPER_BACKUP', '~/.config/alertscraper/backup/')
-    #destination_dir = os.environ.get('ALERTSCRAPER_DESTINATION', '~')
-    #source_dir = os.environ.get('ALERTSCRAPER_SOURCE', '~/dotfiles')
-
     parser.add_argument('-n', '--dryrun', help='dryrun, just simulate',
                         action='store_true')
     parser.add_argument('-v', '--verbose', help='increase output verbosity',
                         action='store_true')
-    # parser.add_argument('-T', '--text-email', help='output text only email',
-    #                     action='store_true')
     parser.add_argument('-H', '--html', help='output html',
                         action='store_true')
     parser.add_argument('-e', '--email', help='output results to email')
@@ -173,7 +167,7 @@ def send_email(email_address, html, text, count, url):
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
 
-    # Create message container - the correct MIME type is multipart/alternative.
+    # Create message container
     subject = 'Alert Scraper: %s results found' % count
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
