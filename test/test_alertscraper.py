@@ -8,4 +8,4 @@ from alertscraper import alertscraper
 
 class TestParseLines:
     def test_parse_lines_simple(self):
-        assert alertscraper.parse_lines('stuff|whatever|thing') == ['stuff']
+        assert alertscraper.parse_lines(['stuff|whatever|thing']) == ['stuff']
