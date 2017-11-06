@@ -218,7 +218,8 @@ def send_email(email_address, html, text, count, url):
 def cli():
     # Hack to get it to work in script situation
     args = list(sys.argv)
-    args.remove(__file__)
+    if __file__ in args:
+        args.remove(__file__)
     main(parse_args(args))
 
 
