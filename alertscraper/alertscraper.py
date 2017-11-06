@@ -29,6 +29,8 @@ def parse_args(argv):
                         action='store_true')
     parser.add_argument('-e', '--email', help='output results to email')
     parser.add_argument('-f', '--file', help='store and diff history in file')
+    parser.add_argument('-F', '--htmlfile',
+                        help='if results are found, output HTML to file')
     parser.add_argument('-t', '--trim', help='specify superfluous text',
                         action='append')
     parser.add_argument('url', nargs=1, help='URL to request')
@@ -49,9 +51,13 @@ def check_args(args):
     if args.verbose:
         global _is_verbose
         _is_verbose = True
+
     # Expand all relevant user directories
     if args.file:
         args.file = os.path.expanduser(args.file)
+
+    if args.htmlfile:
+        args.htmlfile = os.path.expanduser(args.htmlfile)
 
     args.url = args.url[0]
 
@@ -160,6 +166,9 @@ def main(args):
             print('Sending email to ', args.email)
         send_email(args.email, as_html, as_text, len(items), args.url)
 
+    if args.htmlfile:
+        with open(args.htmlfile, 'a+') as f:
+            f.write(as_html)
 
 def send_email(email_address, html, text, count, url):
     import smtplib
