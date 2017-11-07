@@ -1,9 +1,14 @@
-from pyquery import PyQuery
 import argparse
 import os
 import re
 import sys
 import datetime
+import smtplib
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+from pyquery import PyQuery
 
 _is_verbose = False
 parser = None
@@ -28,6 +33,7 @@ def parse_args(argv):
     parser.add_argument('-H', '--html', help='output html',
                         action='store_true')
     parser.add_argument('-e', '--email', help='output results to email')
+    parser.add_argument('-s', '--subject', help='prepend to email subject')
     parser.add_argument('-f', '--file', help='store and diff history in file')
     parser.add_argument('-F', '--htmlfile',
                         help='if results are found, output HTML to file')
@@ -146,6 +152,8 @@ def main(args):
     doc = PyQuery(url=args.url)
     items = process_items(args.dom_path, doc, args.trim)
     if args.file:
+        if _is_verbose:
+            print('Using file "%s"' % args.file)
         items = store_and_remove_seen(args.file, items)
 
     if not items:
@@ -154,7 +162,7 @@ def main(args):
         return
 
     as_text = '\n'.join([str(item) for item in items])
-    as_html = '\n'.join([item.html for item in items])
+    as_html = '<br />\n'.join([item.html for item in items])
 
     if args.html:
         print(as_html)
@@ -164,21 +172,18 @@ def main(args):
     if args.email:
         if _is_verbose:
             print('Sending email to ', args.email)
-        send_email(args.email, as_html, as_text, len(items), args.url)
+        send_email(args.email, as_html, as_text, len(items),
+                   args.url, args.subject)
 
     if args.htmlfile:
         with open(args.htmlfile, 'a+') as f:
             f.write(as_html)
 
 
-def send_email(email_address, html, text, count, url):
-    import smtplib
-
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
+def send_email(email_address, html, text, count, url, subject):
     # Create message container
-    subject = 'Alert Scraper: %s results found' % count
+    subj_prefix = '%s' % subject if subject else 'count'
+    subject = 'Alert Scraper: %s results found' % subj_prefix
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
     msg['From'] = "alertscraper@alertscraper"
