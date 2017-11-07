@@ -30,6 +30,9 @@ def parse_args(argv):
                         action='store_true')
     parser.add_argument('-v', '--verbose', help='increase output verbosity',
                         action='store_true')
+    parser.add_argument('-C', '--cleanup',
+                        help='attempt to simplify link in HTML output',
+                        action='store_true')
     parser.add_argument('-H', '--html', help='output html',
                         action='store_true')
     parser.add_argument('-e', '--email', help='output results to email')
@@ -68,29 +71,48 @@ def check_args(args):
     args.url = args.url[0]
 
 
+non_trimmed = re.compile(r'[^\w$!\?\(\)\.-]+')
+nonword = re.compile(r'\W+')
+
+
 class ListItem:
-    def __init__(self, elem, trims):
+    def __init__(self, elem, trims, should_cleanup):
         text = PyQuery(elem).text()
         for trim in (trims or []):
             text = text.replace(trim, '')
-        self.rx = re.compile(r'\W')
-        self.text = text
-        self.trimmed_text = self.rx.sub(' ', text)
+        self.rx = re.compile(r'\W+')
+        self.text = text.strip()
+        self.trimmed_text = non_trimmed.sub(' ', self.text)
         self.html = PyQuery(elem).html()
-        self.normalized_text = self.rx.sub('', text.lower())
+        if should_cleanup:
+            self.html = self.cleanup_html()
+        self.normalized_text = nonword.sub('', text.lower())
+
+    def cleanup_html(self):
+        pq = PyQuery(self.html)
+        a_tags = pq.find('a')
+
+        # Get longest href
+        hrefs = sorted([a_tag.attrib.get('href') for a_tag in a_tags],
+                       key=lambda s: -len(s) if s is not None else 10000)
+        longest_href = hrefs[0] if hrefs else None
+
+        if not longest_href:
+            return self.html
+        return '<a href="%s">%s</a>' % (longest_href, self.text)
 
     def __str__(self):
         return self.trimmed_text
 
 
-def process_items(dom_paths, doc, trims):
+def process_items(dom_paths, doc, trims, should_cleanup):
     items = []
     for dom_path in dom_paths:
         dom_items = doc(dom_path)
         if _is_verbose:
             print('Found %i for "%s"' % (len(dom_items), dom_path))
         for dom_item in dom_items:
-            items.append(ListItem(dom_item, trims))
+            items.append(ListItem(dom_item, trims, should_cleanup))
     return items
 
 
@@ -150,7 +172,7 @@ def main(args):
     if _is_verbose:
         print('Querying "%s"' % args.url)
     doc = PyQuery(url=args.url)
-    items = process_items(args.dom_path, doc, args.trim)
+    items = process_items(args.dom_path, doc, args.trim, args.cleanup)
     if args.file:
         if _is_verbose:
             print('Using file "%s"' % args.file)
