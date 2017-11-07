@@ -34,7 +34,7 @@ history = ''
 
 setup(
     name='alertscraper',
-    version='0.1.5',
+    version='0.1.6',
     description='Flexible tool for scraping for certain certain DOM elements, and then emailing if new ones are added.',
     long_description=readme + '\n\n' + doclink + '\n\n' + history,
     author='michaelb',
